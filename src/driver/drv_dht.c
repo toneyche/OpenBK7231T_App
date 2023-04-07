@@ -10,6 +10,7 @@
 #include "drv_local.h"
 #include "drv_dht_internal.h"
 
+
 // test device
 static dht_t *test = 0;
 // per-pin devices
