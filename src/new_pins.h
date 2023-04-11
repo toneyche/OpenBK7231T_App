@@ -460,6 +460,13 @@ typedef enum ioRole_e {
 	//iodetail:"file":"new_pins.h",
 	//iodetail:"driver":""}
 	IOR_BL0937_SEL_n,
+	//iodetail:{"name":"DoorSensorWithDeepSleep_pd",
+	//iodetail:"title":"TODO",
+	//iodetail:"descr":"As DoorSensorWithDeepSleep, but with pulldown resistor",
+	//iodetail:"enum":"IOR_DoorSensorWithDeepSleep_pd",
+	//iodetail:"file":"new_pins.h",
+	//iodetail:"driver":""}
+	IOR_DoorSensorWithDeepSleep_pd,
 	//iodetail:{"name":"Total_Options",
 	//iodetail:"title":"TODO",
 	//iodetail:"descr":"Current total number of available IOR roles",
@@ -1046,7 +1053,7 @@ const char* CHANNEL_GetLabel(int ch);
 bool CHANNEL_ShouldAddTogglePrefixToUI(int ch);
 //ledRemap_t *CFG_GetLEDRemap();
 
-void get_Relay_PWM_Count(int* relayCount, int* pwmCount, int* dInputCount);
+void PIN_get_Relay_PWM_Count(int* relayCount, int* pwmCount, int* dInputCount);
 int h_isChannelPWM(int tg_ch);
 int h_isChannelRelay(int tg_ch);
 int h_isChannelDigitalInput(int tg_ch);

@@ -155,6 +155,7 @@ int http_fn_index(http_request_t* request) {
 	int iValue;
 	bool bForceShowRGB;
 	const char* inputName;
+	int channelType;
 
 	bRawPWMs = CFG_HasFlag(OBK_FLAG_LED_RAWCHANNELSMODE);
 	bForceShowRGBCW = CFG_HasFlag(OBK_FLAG_LED_FORCESHOWRGBCWCONTROLLER);
@@ -271,7 +272,6 @@ int http_fn_index(http_request_t* request) {
 
 	poststr(request, "<table>");	//Table default to 100% width in stylesheet
 	for (i = 0; i < CHANNEL_MAX; i++) {
-		int channelType;
 
 		channelType = CHANNEL_GetType(i);
 		// check ability to hide given channel from gui
@@ -294,7 +294,45 @@ int http_fn_index(http_request_t* request) {
 		}
 	}
 	poststr(request, "</table>");
+	poststr(request, "<table>");	//Table default to 100% width in stylesheet
+	for (i = 0; i < CHANNEL_MAX; i++) {
 
+
+		// check ability to hide given channel from gui
+		if (BIT_CHECK(g_hiddenChannels, i)) {
+			continue; // hidden
+		}
+
+		channelType = CHANNEL_GetType(i);
+		if (h_isChannelRelay(i) || channelType == ChType_Toggle) {
+			const char* c;
+			const char *prefix;
+			if (i <= 1) {
+				hprintf255(request, "<tr>");
+			}
+			if (CHANNEL_Check(i)) {
+				c = "bgrn";
+			}
+			else {
+				c = "bred";
+			}
+			poststr(request, "<td><form action=\"index\">");
+			hprintf255(request, "<input type=\"hidden\" name=\"tgl\" value=\"%i\">", i);
+
+			if (CHANNEL_ShouldAddTogglePrefixToUI(i)) {
+				prefix = "Toggle ";
+			}
+			else {
+				prefix = "";
+			}
+
+			hprintf255(request, "<input class=\"%s\" type=\"submit\" value=\"%s%s\"/></form></td>", c, prefix, CHANNEL_GetLabel(i));
+			if (i == CHANNEL_MAX - 1) {
+				poststr(request, "</tr>");
+			}
+		}
+	}
+	poststr(request, "</table>");
 	poststr(request, "<table>");	//Table default to 100% width in stylesheet
 	for (i = 0; i < PLATFORM_GPIO_MAX; i++) {
 		int role;
@@ -318,7 +356,6 @@ int http_fn_index(http_request_t* request) {
 	}
 	for (i = 0; i < CHANNEL_MAX; i++) {
 
-		int channelType;
 
 		// check ability to hide given channel from gui
 		if (BIT_CHECK(g_hiddenChannels, i)) {
@@ -570,31 +607,7 @@ int http_fn_index(http_request_t* request) {
 			poststr(request, "</td></tr>");
 		}
 		else if (h_isChannelRelay(i) || channelType == ChType_Toggle) {
-			const char* c;
-			const char *prefix;
-			if (i <= 1) {
-				hprintf255(request, "<tr>");
-			}
-			if (CHANNEL_Check(i)) {
-				c = "bgrn";
-			}
-			else {
-				c = "bred";
-			}
-			poststr(request, "<td><form action=\"index\">");
-			hprintf255(request, "<input type=\"hidden\" name=\"tgl\" value=\"%i\">", i);
-
-			if (CHANNEL_ShouldAddTogglePrefixToUI(i)) {
-				prefix = "Toggle ";
-			}
-			else {
-				prefix = "";
-			}
-
-			hprintf255(request, "<input class=\"%s\" type=\"submit\" value=\"%s%s\"/></form></td>", c, prefix, CHANNEL_GetLabel(i));
-			if (i == CHANNEL_MAX - 1) {
-				poststr(request, "</tr>");
-			}
+			// HANDLED ABOVE in previous loop
 		}
 		else if ((bRawPWMs && h_isChannelPWM(i)) || (channelType == ChType_Dimmer) || (channelType == ChType_Dimmer256) || (channelType == ChType_Dimmer1000)) {
 			int maxValue;
@@ -646,7 +659,11 @@ int http_fn_index(http_request_t* request) {
 
 		lm = LED_GetMode();
 
-		c_pwms = PIN_CountPinsWithRoleOrRole(IOR_PWM, IOR_PWM_n);
+		//c_pwms = PIN_CountPinsWithRoleOrRole(IOR_PWM, IOR_PWM_n);
+		// This will treat multiple PWMs on a single channel as one.
+		// Thanks to this users can turn for example RGB LED controller
+		// into high power 3-outputs single colors LED controller
+		PIN_get_Relay_PWM_Count(0, &c_pwms, 0);
 		if (bForceShowRGBCW) {
 			c_pwms = 5;
 		}
@@ -1543,7 +1560,7 @@ void doHomeAssistantDiscovery(const char* topic, http_request_t* request) {
 	measuringBattery = DRV_IsMeasuringBattery();
 #endif
 
-	get_Relay_PWM_Count(&relayCount, &pwmCount, &dInputCount);
+	PIN_get_Relay_PWM_Count(&relayCount, &pwmCount, &dInputCount);
 
 	ledDriverChipRunning = LED_IsLedDriverChipRunning();
 
@@ -1749,7 +1766,7 @@ int http_fn_ha_cfg(http_request_t* request) {
 
 	poststr(request, "<textarea rows=\"40\" cols=\"50\">");
 
-	get_Relay_PWM_Count(&relayCount, &pwmCount, &dInputCount);
+	PIN_get_Relay_PWM_Count(&relayCount, &pwmCount, &dInputCount);
 
 	if (relayCount > 0) {
 

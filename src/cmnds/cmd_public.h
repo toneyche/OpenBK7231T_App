@@ -114,6 +114,8 @@ enum EventCode {
 
 	CMD_EVENT_LED_MODE, // Argument: new light mode as integer
 
+	CMD_EVENT_CHANGE_NOMQTTTIME,
+
 	// must be lower than 256
 	CMD_EVENT_MAX_TYPES
 };
@@ -152,6 +154,7 @@ bool Tokenizer_CheckArgsCountAndPrintWarning(const char* cmdStr, int reqCount);
 const char* Tokenizer_GetArg(int i);
 const char* Tokenizer_GetArgFrom(int i);
 int Tokenizer_GetArgInteger(int i);
+int Tokenizer_GetArgIntegerDefault(int i, int def);
 bool Tokenizer_IsArgInteger(int i);
 float Tokenizer_GetArgFloat(int i);
 int Tokenizer_GetArgIntegerRange(int i, int rangeMax, int rangeMin);
